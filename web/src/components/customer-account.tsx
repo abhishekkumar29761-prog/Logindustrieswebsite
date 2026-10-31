@@ -6,16 +6,16 @@ import { useRouter } from "next/navigation";
 import { LogOut, MapPin, PackageCheck, Save, UserRound } from "lucide-react";
 
 import { clearCustomerToken, getCustomerToken, getServerCustomerToken, setCustomerToken, subscribeToCustomerAuth } from "@/lib/auth-store";
+import { getApiBaseUrl } from "@/lib/api-url";
 
 type AccountSection = "profile" | "orders" | "addresses";
 type Profile = { fullName: string; email: string; phone: string; address: string; city: string; postalCode: string };
 type Order = { id: string; order_number: string; status: string; payment_status: string; total: number; created_at: string };
 
 const emptyProfile: Profile = { fullName: "", email: "", phone: "", address: "", city: "", postalCode: "" };
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 function accountFetch(path: string, token: string, init?: RequestInit) {
-  return fetch(`${apiBaseUrl}${path}`, {
+  return fetch(`${getApiBaseUrl()}${path}`, {
     ...init,
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...init?.headers },
   });
@@ -82,7 +82,7 @@ export function CustomerAccount() {
       phone: form.get("phone"),
     };
     try {
-      const response = await fetch(`${apiBaseUrl}${endpoint}`, {
+      const response = await fetch(`${getApiBaseUrl()}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -1,6 +1,7 @@
+import { getApiBaseUrl } from "@/lib/api-url";
+
 const adminTokenKey = "logindustries-admin-token";
 const adminAuthEvent = "logindustries-admin-auth-change";
-export const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export function subscribeToAdminAuth(onChange: () => void) {
   window.addEventListener("storage", onChange);
@@ -30,7 +31,7 @@ export function clearAdminToken() {
 }
 
 export async function adminRequest<T>(path: string, token: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${apiBaseUrl}${path}`, {
+  const response = await fetch(`${getApiBaseUrl()}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",

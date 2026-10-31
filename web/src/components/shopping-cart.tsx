@@ -9,8 +9,7 @@ import { getCustomerToken, getServerCustomerToken, subscribeToCustomerAuth } fro
 import { getCartSnapshot, getServerCartSnapshot, parseCart, removeCartItem, setCartQuantity, clearCart, subscribeToCart } from "@/lib/cart-store";
 import { products as previewProducts, type Product } from "@/lib/mock-data";
 import { getCatalogProducts } from "@/lib/store-api";
-
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+import { getApiBaseUrl } from "@/lib/api-url";
 
 export function ShoppingCartPage() {
   const cartSnapshot = useSyncExternalStore(getCartSubscription, getCartSnapshot, getServerCartSnapshot);
@@ -47,7 +46,7 @@ export function ShoppingCartPage() {
     }
     setSubmitting(true);
     try {
-      const response = await fetch(`${apiBaseUrl}/api/account/orders`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/account/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({

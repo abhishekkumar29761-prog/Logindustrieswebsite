@@ -7,6 +7,7 @@ import { ArrowRight, LockKeyhole } from "lucide-react";
 
 import { BrandLogo } from "@/components/brand-logo";
 import { setAdminToken } from "@/lib/admin-api";
+import { getApiBaseUrl } from "@/lib/api-url";
 
 export default function AdminLoginPage() {
   const [message, setMessage] = useState("");
@@ -19,7 +20,7 @@ export default function AdminLoginPage() {
     setSubmitting(true);
     const formData = new FormData(event.currentTarget);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/auth/login`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.get("email"), password: formData.get("password") }),

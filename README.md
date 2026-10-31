@@ -12,7 +12,7 @@ Next.js storefront, Express API, and Supabase database/authentication foundation
 
 1. Create a Supabase project.
 2. In the Supabase SQL Editor, run `api/supabase/migrations/202610030001_initial_store.sql`.
-3. Copy `api/.env.example` to `api/.env` and set `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. Keep the service-role key private; it is server-only and must never use a `NEXT_PUBLIC_` prefix.
+3. Copy `api/.env.example` to `api/.env` and set `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. Keep the service-role key private; it is server-only and must never use a `NEXT_PUBLIC_` prefix. `CORS_ORIGINS` is a comma-separated list of allowed web origins.
 4. Copy `web/.env.local.example` to `web/.env.local`; keep `NEXT_PUBLIC_API_URL=http://localhost:4000` for local development.
 5. Set Supabase Auth email-confirmation policy to match your customer signup requirements.
 6. Create the first admin in Supabase Auth, then promote that user's profile by running this in the SQL Editor with the real auth user UUID:
@@ -43,6 +43,16 @@ npm run dev
 ```
 
 API health: `http://localhost:4000/health`
+
+## Deploy as two Vercel projects
+
+Create two Vercel projects from this repository: set the API project's Root Directory to `api` and the web project's Root Directory to `web`.
+
+- API project environment variables: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `CORS_ORIGINS` (the deployed web origin, with no trailing path). Vercel supplies the runtime port.
+- Web project environment variable: `NEXT_PUBLIC_API_URL` set to the deployed API project URL. This value is required at build time; there is no hardcoded localhost fallback.
+- For local development, use `NEXT_PUBLIC_API_URL=http://localhost:4000` in `web/.env.local` and allow `http://localhost:3000` in the API's `CORS_ORIGINS`.
+
+The API's `api/index.js` entry exports the Express app for Vercel. `server.js` remains the local Node server entry point.
 
 ## API summary
 

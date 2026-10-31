@@ -7,7 +7,8 @@ import { ExternalLink, LogOut } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { clearAdminToken, getAdminToken, apiBaseUrl } from "@/lib/admin-api";
+import { clearAdminToken, getAdminToken } from "@/lib/admin-api";
+import { getApiBaseUrl } from "@/lib/api-url";
 
 export function PortalShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -19,7 +20,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
     const token = getAdminToken();
     if (token) {
       try {
-        await fetch(`${apiBaseUrl}/api/auth/logout`, {
+        await fetch(`${getApiBaseUrl()}/api/auth/logout`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
         });

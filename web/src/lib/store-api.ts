@@ -1,6 +1,5 @@
 import { categories, products, type Product } from "@/lib/mock-data";
-
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+import { getApiBaseUrl } from "@/lib/api-url";
 
 export type ProductPage = { items: Product[]; count: number; page: number; limit: number };
 type ProductResponse = { item: Product };
@@ -35,6 +34,7 @@ function normalizeProduct(value: unknown): Product | null {
 }
 
 export async function getCatalogProducts(query: CatalogQuery = {}): Promise<ProductPage> {
+  const apiBaseUrl = getApiBaseUrl();
   const page = Math.max(1, query.page ?? 1);
   const limit = Math.min(100, Math.max(1, query.limit ?? 12));
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
@@ -64,6 +64,7 @@ export async function getCatalogProducts(query: CatalogQuery = {}): Promise<Prod
 }
 
 export async function getCatalogProduct(slug: string): Promise<Product | null> {
+  const apiBaseUrl = getApiBaseUrl();
   try {
     const response = await fetch(`${apiBaseUrl}/api/products/${encodeURIComponent(slug)}`, { next: { revalidate: 60 } });
     if (response.status === 404) return null;

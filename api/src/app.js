@@ -6,9 +6,10 @@ const { authClient, configured, serviceClient } = require("./supabase");
 const { authenticate } = require("./middleware/auth");
 
 const app = express();
-const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:3000")
+const allowedOrigins = (process.env.CORS_ORIGINS || "")
   .split(",").map((origin) => origin.trim()).filter(Boolean);
 
+app.set("trust proxy", 1);
 app.disable("x-powered-by");
 app.use(helmet());
 app.use(cors({
