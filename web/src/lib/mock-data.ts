@@ -3,9 +3,11 @@ export type Product = {
   slug: string;
   name: string;
   category: string;
+  categorySlug?: string;
   price: number | null;
   originalPrice: number | null;
   image: string;
+  images?: string[];
   description?: string;
   stock?: number | null;
   active?: boolean;
@@ -15,22 +17,22 @@ export const categories = [
   {
     slug: "water-controllers",
     name: "Water Controllers",
-    image: "https://logindustries.com/wp-content/uploads/2025/11/1.product_1-300x300.png",
+    image: "",
   },
   {
     slug: "sanitizer-dispensers",
     name: "Sanitizer Dispensers",
-    image: "https://logindustries.com/wp-content/uploads/2026/05/AutoSan-DUal-Toweer-300x300.jpeg",
+    image: "",
   },
   {
     slug: "smartphones-security-lock",
     name: "Smartphone Security Lock",
-    image: "https://logindustries.com/wp-content/uploads/2026/09/WhatsApp-Image-2026-09-12-at-10.21.06-PM-300x300.jpeg",
+    image: "",
   },
   {
     slug: "automatic-hydraulic-door-close",
     name: "Automatic Hydraulic Door Closer",
-    image: "https://logindustries.com/wp-content/uploads/2026/09/WhatsApp-Image-2026-09-13-at-10.43.36-AM-600x600.jpeg",
+    image: "",
   },
 ];
 
@@ -42,7 +44,7 @@ export const products: Product[] = [
     category: "Water Controllers",
     price: 4199,
     originalPrice: 8500,
-    image: "https://logindustries.com/wp-content/uploads/2025/11/5.product_5.2-300x300.png",
+    image: "",
   },
   {
     id: 2,
@@ -51,7 +53,7 @@ export const products: Product[] = [
     category: "Water Controllers",
     price: 4999,
     originalPrice: 9999,
-    image: "https://logindustries.com/wp-content/uploads/2025/11/4.product_4.2-300x300.png",
+    image: "",
   },
   {
     id: 3,
@@ -60,7 +62,7 @@ export const products: Product[] = [
     category: "Water Controllers",
     price: 5999,
     originalPrice: 10999,
-    image: "https://logindustries.com/wp-content/uploads/2025/11/1.product_1-300x300.png",
+    image: "",
   },
   {
     id: 4,
@@ -69,7 +71,7 @@ export const products: Product[] = [
     category: "Water Controllers",
     price: 3499,
     originalPrice: 6999,
-    image: "https://logindustries.com/wp-content/uploads/2025/11/5.product_5.2-300x300.png",
+    image: "",
   },
   {
     id: 5,
@@ -78,7 +80,7 @@ export const products: Product[] = [
     category: "Water Controllers",
     price: 3499,
     originalPrice: 6999,
-    image: "https://logindustries.com/wp-content/uploads/2025/11/6.product_6-300x300.png",
+    image: "",
   },
   {
     id: 6,
@@ -87,7 +89,7 @@ export const products: Product[] = [
     category: "Sanitizer Dispensers",
     price: 7999,
     originalPrice: 15999,
-    image: "https://logindustries.com/wp-content/uploads/2026/05/AutoSan-DUal-Toweer-300x300.jpeg",
+    image: "",
   },
   {
     id: 7,
@@ -96,7 +98,7 @@ export const products: Product[] = [
     category: "Sanitizer Dispensers",
     price: 3499,
     originalPrice: 7999,
-    image: "https://logindustries.com/wp-content/uploads/2026/05/WhatsApp-Image-2026-05-13-at-6.56.42-PM-300x300.jpeg",
+    image: "",
   },
   {
     id: 8,
@@ -105,7 +107,7 @@ export const products: Product[] = [
     category: "Sanitizer Dispensers",
     price: 5999,
     originalPrice: 11999,
-    image: "https://logindustries.com/wp-content/uploads/2026/05/AutoSanTOwerr-300x300.jpeg",
+    image: "",
   },
   {
     id: 9,
@@ -114,7 +116,7 @@ export const products: Product[] = [
     category: "Sanitizer Dispensers",
     price: 2499,
     originalPrice: 4999,
-    image: "https://logindustries.com/wp-content/uploads/2026/05/AutoSan-Wall-Pro-600x600.png",
+    image: "",
   },
   {
     id: 10,
@@ -123,7 +125,7 @@ export const products: Product[] = [
     category: "Smartphone Security Lock",
     price: 3000,
     originalPrice: 6500,
-    image: "https://logindustries.com/wp-content/uploads/2026/09/WhatsApp-Image-2026-09-12-at-10.21.06-PM-300x300.jpeg",
+    image: "",
   },
   {
     id: 11,
@@ -132,7 +134,7 @@ export const products: Product[] = [
     category: "Automatic Hydraulic Door Closer",
     price: null,
     originalPrice: null,
-    image: "https://logindustries.com/wp-content/uploads/2026/09/WhatsApp-Image-2026-09-13-at-10.43.36-AM-600x600.jpeg",
+    image: "",
   },
 ];
 

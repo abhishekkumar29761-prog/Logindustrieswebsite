@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { ProductPhoto } from "@/components/product-photo";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import type { Product } from "@/lib/mock-data";
 
@@ -7,12 +7,11 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <article className="group min-w-0">
       <Link href={`/product/${product.slug}`} className="relative block aspect-[4/3] overflow-hidden bg-slate-100">
-        <Image
-          src={product.image}
+        <ProductPhoto
+          src={product.images?.[0] || product.image}
           alt={product.name}
           width={640}
           height={480}
-          unoptimized
           className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
         />
         {product.originalPrice != null && product.price != null && (

@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useSyncExternalStore, type FormEvent } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Minus, Plus, Trash2 } from "lucide-react";
 
 import { getCustomerToken, getServerCustomerToken, subscribeToCustomerAuth } from "@/lib/auth-store";
@@ -10,6 +9,7 @@ import { getCartSnapshot, getServerCartSnapshot, parseCart, removeCartItem, setC
 import { products as previewProducts, type Product } from "@/lib/mock-data";
 import { getCatalogProducts } from "@/lib/store-api";
 import { getApiBaseUrl } from "@/lib/api-url";
+import { ProductPhoto } from "@/components/product-photo";
 
 export function ShoppingCartPage() {
   const cartSnapshot = useSyncExternalStore(getCartSubscription, getCartSnapshot, getServerCartSnapshot);
@@ -84,7 +84,7 @@ export function ShoppingCartPage() {
             {cartProducts.map(({ line, product }) => product ? (
               <article key={line.productId} className="flex gap-4 py-5 sm:gap-6">
                 <Link href={`/product/${product.slug}`} className="h-24 w-24 shrink-0 bg-slate-100 sm:h-28 sm:w-28">
-                  <Image src={product.image} alt={product.name} width={112} height={112} unoptimized className="h-full w-full object-contain p-2" />
+                  <ProductPhoto src={product.images?.[0] || product.image} alt={product.name} width={112} height={112} className="h-full w-full object-contain p-2" />
                 </Link>
                 <div className="min-w-0 flex-1">
                   <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-cyan-900">{product.category}</p>

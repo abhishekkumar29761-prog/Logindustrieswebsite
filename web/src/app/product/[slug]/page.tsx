@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Mail, ShieldCheck, Truck } from "lucide-react";
-import Image from "next/image";
 
 import { ProductCard } from "@/components/product-card";
+import { ProductGallery } from "@/components/product-gallery";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { categories } from "@/lib/mock-data";
 import { getCatalogProduct, getCatalogProducts } from "@/lib/store-api";
@@ -27,9 +27,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       </Link>
 
       <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="overflow-hidden bg-[#f3f6f7]">
-          <Image src={product.image} alt={product.name} width={800} height={800} unoptimized className="h-[360px] w-full object-contain p-8 sm:h-[500px]" />
-        </div>
+        <ProductGallery images={product.images?.length ? product.images : (product.image ? [product.image] : [])} name={product.name} />
 
         <div>
           <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-600">

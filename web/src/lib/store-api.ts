@@ -25,11 +25,14 @@ function normalizeProduct(value: unknown): Product | null {
     slug: row.slug,
     name: row.name,
     category: categoryName,
+    categorySlug: typeof row.category_slug === "string" ? row.category_slug : categoryRecord.slug,
     price,
     originalPrice,
-    image: typeof row.image === "string" ? row.image : categoryRecord.image,
+    image: typeof row.image === "string" ? row.image : "",
+    images: Array.isArray(row.images) ? row.images.filter((image): image is string => typeof image === "string") : (typeof row.image === "string" && row.image ? [row.image] : []),
     description: typeof row.description === "string" ? row.description : "",
     stock: typeof row.stock === "number" ? row.stock : null,
+    active: typeof row.active === "boolean" ? row.active : true,
   };
 }
 

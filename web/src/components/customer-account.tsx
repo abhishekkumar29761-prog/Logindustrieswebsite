@@ -7,6 +7,7 @@ import { LogOut, MapPin, PackageCheck, Save, UserRound } from "lucide-react";
 
 import { clearCustomerToken, getCustomerToken, getServerCustomerToken, setCustomerToken, subscribeToCustomerAuth } from "@/lib/auth-store";
 import { getApiBaseUrl } from "@/lib/api-url";
+import { PasswordInput } from "@/components/password-input";
 
 type AccountSection = "profile" | "orders" | "addresses";
 type Profile = { fullName: string; email: string; phone: string; address: string; city: string; postalCode: string };
@@ -175,7 +176,10 @@ export function CustomerAccount() {
               <form onSubmit={authenticate} className="mt-6 space-y-4">
                 {authMode === "register" && <label className="block text-sm font-medium text-slate-700">Full name<input name="fullName" autoComplete="name" required className="mt-2 w-full border border-slate-300 px-3 py-3 outline-none focus:border-cyan-800" /></label>}
                 <label className="block text-sm font-medium text-slate-700">Email address<input name="email" type="email" autoComplete="email" required className="mt-2 w-full border border-slate-300 px-3 py-3 outline-none focus:border-cyan-800" /></label>
-                <label className="block text-sm font-medium text-slate-700">Password<input name="password" type="password" autoComplete={authMode === "login" ? "current-password" : "new-password"} minLength={8} required className="mt-2 w-full border border-slate-300 px-3 py-3 outline-none focus:border-cyan-800" /></label>
+                <div>
+                  <label htmlFor="account-password" className="block text-sm font-medium text-slate-700">Password</label>
+                  <PasswordInput id="account-password" name="password" autoComplete={authMode === "login" ? "current-password" : "new-password"} minLength={8} required className="mt-2 w-full border border-slate-300 px-3 py-3 outline-none focus:border-cyan-800" />
+                </div>
                 {authMode === "register" && <label className="block text-sm font-medium text-slate-700">Phone<input name="phone" type="tel" autoComplete="tel" className="mt-2 w-full border border-slate-300 px-3 py-3 outline-none focus:border-cyan-800" /></label>}
                 <button disabled={submitting} className="min-h-11 w-full bg-[#102b43] px-5 text-sm font-semibold text-white transition hover:bg-cyan-900 disabled:opacity-60">{submitting ? "Please wait..." : authMode === "login" ? "Sign in" : "Create account"}</button>
               </form>

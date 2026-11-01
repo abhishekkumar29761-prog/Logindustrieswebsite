@@ -60,11 +60,13 @@ export default async function ProductsPage({
         </Link>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      {result.items.length === 0 ? (
+        <p className="border border-dashed border-slate-300 px-4 py-12 text-center text-sm text-slate-500">No products yet.</p>
+      ) : <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {result.items.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
-      </div>
+      </div>}
       {pageCount > 1 && <nav aria-label="Catalog pages" className="mt-10 flex flex-wrap justify-center gap-2">
         {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => (
           <Link

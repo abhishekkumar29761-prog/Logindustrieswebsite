@@ -1,19 +1,23 @@
 const { authClient, serviceClient } = require("../supabase");
 
-function authenticate(requiredRole) {
+function authenticate(requiredRole, clients = { authClient, serviceClient }) {
   return async (req, res, next) => {
-    if (!authClient || !serviceClient) {
+    const authorization = req.get("authorization") || "";
+    if (!authorization.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Authentication token required." });
+    }
+
+    if (!clients.authClient || !clients.serviceClient) {
       return res.status(503).json({ error: "Authentication is not configured. Add Supabase environment variables." });
     }
 
-    const authorization = req.get("authorization") || "";
-    const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : null;
+    const token = authorization.slice(7);
     if (!token) return res.status(401).json({ error: "Bearer access token required." });
 
     try {
-      const { data, error } = await authClient.auth.getUser(token);
+      const { data, error } = await clients.authClient.auth.getUser(token);
       if (error || !data.user) return res.status(401).json({ error: "Invalid or expired access token." });
-      const { data: profile, error: profileError } = await serviceClient
+      const { data: profile, error: profileError } = await clients.serviceClient
         .from("profiles")
         .select("id, full_name, phone, shipping_address, role")
         .eq("id", data.user.id)

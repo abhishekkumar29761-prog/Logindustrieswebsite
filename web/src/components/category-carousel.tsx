@@ -41,15 +41,17 @@ export function CategoryCarousel() {
             className="group flex w-[112px] shrink-0 snap-start flex-col items-center gap-3 text-center sm:w-[142px]"
           >
             <span className="relative aspect-square w-full overflow-hidden rounded-full border border-slate-200 bg-[#f3f6f7] p-1 transition duration-300 group-hover:-translate-y-1 group-hover:border-cyan-800 group-hover:shadow-[0_10px_25px_-12px_rgba(8,145,178,0.55)]">
-              <Image
-                src={category.image}
-                alt=""
-                width={300}
-                height={300}
-                unoptimized
-                className="h-full w-full rounded-full object-cover"
-                loading="lazy"
-              />
+              {category.image ? (
+                <Image
+                  src={category.image}
+                  alt=""
+                  width={300}
+                  height={300}
+                  unoptimized
+                  className="h-full w-full rounded-full object-cover"
+                  loading="lazy"
+                />
+              ) : <span aria-label={`${category.name} image unavailable`} role="img" className="block h-full w-full rounded-full bg-slate-200" />}
             </span>
             <span className="min-h-10 text-sm font-semibold leading-5 text-slate-800 group-hover:text-cyan-900">
               {category.name}

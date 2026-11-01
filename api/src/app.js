@@ -2,10 +2,13 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const { rateLimit } = require("express-rate-limit");
+const multer = require("multer");
+const { randomUUID } = require("node:crypto");
 const { authClient, configured, serviceClient } = require("./supabase");
 const { authenticate } = require("./middleware/auth");
 
 const app = express();
+app.locals.isAllowedProductImageType = isAllowedProductImageType;
 const allowedOrigins = (process.env.CORS_ORIGINS || "")
   .split(",").map((origin) => origin.trim()).filter(Boolean);
 
@@ -26,6 +29,19 @@ app.use("/api", rateLimit({ windowMs: 60_000, limit: 180, standardHeaders: "draf
 const authLimiter = rateLimit({ windowMs: 15 * 60_000, limit: 20, standardHeaders: "draft-8", legacyHeaders: false });
 const customer = authenticate("customer");
 const admin = authenticate("admin");
+const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+function isAllowedProductImageType(mimetype) {
+  return allowedImageTypes.has(mimetype);
+}
+
+const productImageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024, files: 10 },
+  fileFilter(req, file, callback) {
+    if (!isAllowedProductImageType(file.mimetype)) return callback(new Error("Only JPG, PNG, and WebP images are allowed."));
+    callback(null, true);
+  },
+});
 
 function requireDatabase(req, res, next) {
   if (!configured || !serviceClient) {
@@ -42,20 +58,49 @@ function validPassword(value) {
   return typeof value === "string" && value.length >= 8;
 }
 
+function isProductStorageImage(value) {
+  if (typeof value !== "string") return false;
+  try {
+    const imageUrl = new URL(value);
+    const supabaseOrigin = new URL(process.env.SUPABASE_URL).origin;
+    return imageUrl.origin === supabaseOrigin
+      && imageUrl.pathname.startsWith("/storage/v1/object/public/product-images/");
+  } catch {
+    return false;
+  }
+}
+
 function toProduct(row) {
+  const images = Array.isArray(row.images) ? row.images.filter(isProductStorageImage) : [];
+  const mainImage = (isProductStorageImage(row.image_url) ? row.image_url : null) || images[0] || null;
   return {
     id: row.id,
     slug: row.slug,
     name: row.name,
     category: row.categories?.name || "",
     category_slug: row.category_slug,
+    categorySlug: row.category_slug,
     price: row.price === null ? null : Number(row.price),
     originalPrice: row.original_price === null ? null : Number(row.original_price),
-    image: row.image_url,
+    image: mainImage,
+    images: images.length ? images : (mainImage ? [mainImage] : []),
     description: row.description || "",
     stock: row.stock,
     active: row.is_active,
   };
+}
+
+function hasValidImageSignature(file) {
+  const { mimetype, buffer } = file;
+  if (mimetype === "image/jpeg") return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  if (mimetype === "image/png") return buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  if (mimetype === "image/webp") return buffer.toString("ascii", 0, 4) === "RIFF" && buffer.toString("ascii", 8, 12) === "WEBP";
+  return false;
+}
+
+function validateImages(images) {
+  return Array.isArray(images) && images.length <= 10
+    && images.every((image) => typeof image === "string" && /^https:\/\//.test(image));
 }
 
 app.get("/health", (req, res) => {
@@ -121,7 +166,11 @@ app.get("/api/categories", requireDatabase, async (req, res, next) => {
   try {
     const { data, error } = await serviceClient.from("categories").select("slug, name, image_url").order("sort_order");
     if (error) return next(error);
-    res.json({ items: data.map((category) => ({ ...category, image: category.image_url })), count: data.length });
+    res.json({ items: data.map((category) => ({
+      ...category,
+      image_url: isProductStorageImage(category.image_url) ? category.image_url : null,
+      image: isProductStorageImage(category.image_url) ? category.image_url : null,
+    })), count: data.length });
   } catch (error) { next(error); }
 });
 
@@ -221,8 +270,49 @@ app.get("/api/admin/products", requireDatabase, admin, async (req, res, next) =>
   } catch (error) { next(error); }
 });
 
+app.post("/api/admin/uploads", admin, requireDatabase, productImageUpload.array("files", 10), async (req, res, next) => {
+  const files = req.files || [];
+  if (!files.length) return res.status(400).json({ error: "Select at least one image to upload." });
+  if (files.some((file) => !hasValidImageSignature(file))) {
+    return res.status(400).json({ error: "One or more files are not valid JPG, PNG, or WebP images." });
+  }
+  try {
+    const items = [];
+    for (const file of files) {
+      const extension = file.mimetype === "image/jpeg" ? "jpg" : file.mimetype.slice("image/".length);
+      const path = `${randomUUID()}.${extension}`;
+      const { error } = await serviceClient.storage.from("product-images").upload(path, file.buffer, {
+        contentType: file.mimetype, cacheControl: "31536000", upsert: false,
+      });
+      if (error) return next(error);
+      const { data } = serviceClient.storage.from("product-images").getPublicUrl(path);
+      items.push({ url: data.publicUrl, path });
+    }
+    res.status(201).json({ items });
+  } catch (error) { next(error); }
+});
+
+app.delete("/api/admin/uploads", requireDatabase, admin, async (req, res, next) => {
+  let url;
+  try { url = new URL(req.body?.url); } catch { return res.status(400).json({ error: "Provide a valid product image URL." }); }
+  const supabaseUrl = new URL(process.env.SUPABASE_URL);
+  const prefix = "/storage/v1/object/public/product-images/";
+  if (url.origin !== supabaseUrl.origin || !url.pathname.startsWith(prefix)) {
+    return res.status(400).json({ error: "Only images in the product-images bucket can be removed." });
+  }
+  const path = decodeURIComponent(url.pathname.slice(prefix.length));
+  if (!path || path.split("/").some((part) => part === "..")) {
+    return res.status(400).json({ error: "The product image URL is invalid." });
+  }
+  try {
+    const { error } = await serviceClient.storage.from("product-images").remove([path]);
+    if (error) return next(error);
+    res.status(204).end();
+  } catch (error) { next(error); }
+});
+
 app.post("/api/admin/products", requireDatabase, admin, async (req, res, next) => {
-  const { slug, name, category_slug: categorySlug, price, original_price: originalPrice, image_url: imageUrl, description, stock } = req.body || {};
+  const { slug, name, category_slug: categorySlug, price, original_price: originalPrice, image_url: imageUrl, images, description, stock, is_active: isActive } = req.body || {};
   if (typeof slug !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || typeof name !== "string" || !name.trim() || name.length > 200 || typeof categorySlug !== "string") {
     return res.status(400).json({ error: "Valid slug, name, and category_slug are required." });
   }
@@ -230,12 +320,15 @@ app.post("/api/admin/products", requireDatabase, admin, async (req, res, next) =
   if (originalPrice !== null && originalPrice !== undefined && (!Number.isFinite(Number(originalPrice)) || Number(originalPrice) < 0)) return res.status(400).json({ error: "original_price must be null or a non-negative number." });
   if (stock !== null && stock !== undefined && (!Number.isInteger(stock) || stock < 0)) return res.status(400).json({ error: "stock must be null or a non-negative integer." });
   if (imageUrl !== undefined && imageUrl !== null && (typeof imageUrl !== "string" || !/^https:\/\//.test(imageUrl))) return res.status(400).json({ error: "image_url must be null or an https URL." });
+  if (images !== undefined && !validateImages(images)) return res.status(400).json({ error: "images must be an array of up to 10 https URLs." });
   if (description !== undefined && description !== null && (typeof description !== "string" || description.length > 10000)) return res.status(400).json({ error: "description must be 10000 characters or fewer." });
+  if (isActive !== undefined && typeof isActive !== "boolean") return res.status(400).json({ error: "is_active must be a boolean." });
   try {
     const { data, error } = await serviceClient.from("products").insert({
       slug, name: name.trim(), category_slug: categorySlug, price: price ?? null,
-      original_price: originalPrice ?? null, image_url: imageUrl || null, description: description || null,
-      stock: stock ?? null, is_active: true,
+      original_price: originalPrice ?? null, images: images ?? (imageUrl ? [imageUrl] : []),
+      image_url: images ? (images[0] || null) : (imageUrl || null), description: description || null,
+      stock: stock ?? null, is_active: isActive ?? true,
     }).select("*, categories(name, slug)").single();
     if (error) return next(error);
     res.status(201).json({ item: toProduct(data) });
@@ -243,7 +336,7 @@ app.post("/api/admin/products", requireDatabase, admin, async (req, res, next) =
 });
 
 app.patch("/api/admin/products/:id", requireDatabase, admin, async (req, res, next) => {
-  const fields = ["slug", "name", "category_slug", "price", "original_price", "image_url", "description", "stock", "is_active"];
+  const fields = ["slug", "name", "category_slug", "price", "original_price", "image_url", "images", "description", "stock", "is_active"];
   const patch = Object.fromEntries(Object.entries(req.body || {}).filter(([key]) => fields.includes(key)));
   if (!Object.keys(patch).length) return res.status(400).json({ error: "No editable product fields provided." });
   if (patch.slug !== undefined && (typeof patch.slug !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(patch.slug))) return res.status(400).json({ error: "slug must contain lowercase letters, numbers, and hyphens." });
@@ -253,6 +346,9 @@ app.patch("/api/admin/products/:id", requireDatabase, admin, async (req, res, ne
   if (patch.original_price !== undefined && patch.original_price !== null && (!Number.isFinite(Number(patch.original_price)) || Number(patch.original_price) < 0)) return res.status(400).json({ error: "original_price must be null or a non-negative number." });
   if (patch.stock !== undefined && patch.stock !== null && (!Number.isInteger(patch.stock) || patch.stock < 0)) return res.status(400).json({ error: "stock must be null or a non-negative integer." });
   if (patch.image_url !== undefined && patch.image_url !== null && (typeof patch.image_url !== "string" || !/^https:\/\//.test(patch.image_url))) return res.status(400).json({ error: "image_url must be null or an https URL." });
+  if (patch.images !== undefined && !validateImages(patch.images)) return res.status(400).json({ error: "images must be an array of up to 10 https URLs." });
+  if (patch.images !== undefined) patch.image_url = patch.images[0] || null;
+  else if (patch.image_url !== undefined) patch.images = patch.image_url ? [patch.image_url] : [];
   if (patch.description !== undefined && patch.description !== null && (typeof patch.description !== "string" || patch.description.length > 10000)) return res.status(400).json({ error: "description must be 10000 characters or fewer." });
   if (patch.is_active !== undefined && typeof patch.is_active !== "boolean") return res.status(400).json({ error: "is_active must be a boolean." });
   try {
@@ -266,7 +362,7 @@ app.patch("/api/admin/products/:id", requireDatabase, admin, async (req, res, ne
 
 app.delete("/api/admin/products/:id", requireDatabase, admin, async (req, res, next) => {
   try {
-    const { data, error } = await serviceClient.from("products").update({ is_active: false }).eq("id", req.params.id).select("id").maybeSingle();
+    const { data, error } = await serviceClient.from("products").delete().eq("id", req.params.id).select("id").maybeSingle();
     if (error) return next(error);
     if (!data) return res.status(404).json({ error: "Product not found." });
     res.status(204).end();
@@ -299,6 +395,17 @@ app.patch("/api/admin/orders/:id", requireDatabase, admin, async (req, res, next
 app.use((req, res) => res.status(404).json({ error: "Route not found." }));
 app.use((error, req, res, next) => {
   if (res.headersSent) return next(error);
+  const errorDetails = [error.message, error.details, error.hint].filter(Boolean).join(" ");
+  if ((error.code === "42703" || error.code === "PGRST204")
+      && /\bimages\b/i.test(errorDetails)
+      && /(does not exist|not found|schema cache|could not find)/i.test(errorDetails)) {
+    return res.status(503).json({
+      error: "The products.images column is missing. Run migration 202611010001_product_images.sql in Supabase.",
+    });
+  }
+  if (error.code === "LIMIT_FILE_SIZE") return res.status(400).json({ error: "Each image must be 2 MB or smaller." });
+  if (error.code === "LIMIT_FILE_COUNT" || error.code === "LIMIT_UNEXPECTED_FILE") return res.status(400).json({ error: "Upload up to 10 images at a time using the files field." });
+  if (error.message === "Only JPG, PNG, and WebP images are allowed.") return res.status(400).json({ error: error.message });
   if (error.message === "Origin is not allowed by CORS.") return res.status(403).json({ error: error.message });
   if (error.code === "23505") return res.status(409).json({ error: "A record with that unique value already exists." });
   if (error.code === "23503") return res.status(400).json({ error: "The referenced record does not exist." });

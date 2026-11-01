@@ -34,7 +34,7 @@ export async function adminRequest<T>(path: string, token: string, init?: Reques
   const response = await fetch(`${getApiBaseUrl()}${path}`, {
     ...init,
     headers: {
-      "Content-Type": "application/json",
+      ...(typeof FormData !== "undefined" && init?.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
       Authorization: `Bearer ${token}`,
       ...init?.headers,
     },

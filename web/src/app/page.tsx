@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ArrowRight, Boxes, ChevronRight, Headphones, PackageSearch } from "lucide-react";
-import Image from "next/image";
 
 import { CategoryCarousel } from "@/components/category-carousel";
 import { ProductCard } from "@/components/product-card";
@@ -34,14 +33,7 @@ export default async function HomePage() {
           </div>
 
           <Link href="/products" className="group relative order-2 block min-h-[300px] overflow-hidden bg-white sm:min-h-[420px] lg:order-2">
-            <Image
-              src="https://logindustries.com/wp-content/uploads/2025/11/1.product_1-300x300.png"
-              alt="LOG Industries Tank Mate water controller"
-              width={600}
-              height={600}
-              unoptimized
-              className="absolute inset-0 h-full w-full bg-white object-contain p-8 transition duration-700 group-hover:scale-[1.03] sm:p-12"
-            />
+            <div aria-label="Product image unavailable" role="img" className="absolute inset-0 h-full w-full bg-slate-200" />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
             <div className="absolute bottom-5 left-5 flex items-center gap-2 text-sm font-semibold text-white sm:bottom-7 sm:left-7">
               Explore LOG products <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" />
@@ -74,11 +66,13 @@ export default async function HomePage() {
               View all <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="grid gap-x-5 gap-y-9 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {products.length === 0 ? (
+            <p className="border border-dashed border-slate-300 px-4 py-12 text-center text-sm text-slate-500">No products yet.</p>
+          ) : <div className="grid gap-x-5 gap-y-9 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
-          </div>
+          </div>}
         </div>
       </section>
 

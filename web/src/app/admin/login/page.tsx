@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, LockKeyhole } from "lucide-react";
 
 import { BrandLogo } from "@/components/brand-logo";
+import { PasswordInput } from "@/components/password-input";
 import { setAdminToken } from "@/lib/admin-api";
 import { getApiBaseUrl } from "@/lib/api-url";
 
@@ -67,10 +68,9 @@ export default function AdminLoginPage() {
             <label htmlFor="password" className="mb-2 block text-sm font-medium text-slate-300">
               Password
             </label>
-            <input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
               className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400"
             />
           </div>
