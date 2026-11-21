@@ -32,6 +32,11 @@ export function ShoppingCartPage() {
   }));
   const totalCount = lines.reduce((sum, line) => sum + line.quantity, 0);
   const subtotal = cartProducts.reduce((sum, entry) => sum + (entry.product?.price ?? 0) * entry.line.quantity, 0);
+  const quoteItems = cartProducts.filter(({ product }) => product?.price == null);
+  const quoteEmail = `mailto:industrieslog@gmail.com?${new URLSearchParams({
+    subject: "Product price request",
+    body: `Please share the current price and availability for:\n${quoteItems.map(({ line, product }) => `- ${product?.name || "Product"} (quantity: ${line.quantity})`).join("\n")}`,
+  })}`;
 
   async function submitOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,8 +45,12 @@ export function ShoppingCartPage() {
       setMessage("Sign in to place this order.");
       return;
     }
-    if (!cartProducts.length || cartProducts.some(({ product }) => !product || product.price == null)) {
-      setMessage("One or more cart items are unavailable or need a confirmed price. Remove them before checkout.");
+    if (!cartProducts.length || cartProducts.some(({ product }) => !product)) {
+      setMessage("One or more cart items are unavailable. Remove them before checkout.");
+      return;
+    }
+    if (quoteItems.length) {
+      setMessage("Request a price for items marked “Price on request” before placing this order.");
       return;
     }
     setSubmitting(true);
@@ -110,6 +119,14 @@ export function ShoppingCartPage() {
           <aside className="border border-slate-200 bg-white p-5 sm:p-6">
             <h2 className="text-lg font-bold text-slate-950">Order summary</h2>
             <div className="mt-5 flex justify-between border-b border-slate-200 pb-4 text-sm text-slate-600"><span>Items subtotal</span><span className="font-semibold text-slate-900">₹{subtotal.toLocaleString("en-IN")}</span></div>
+            {quoteItems.length > 0 && (
+              <div className="mt-4 rounded-sm border border-cyan-200 bg-cyan-50 p-3">
+                <p className="text-xs leading-5 text-slate-700">Price is needed for {quoteItems.length} item{quoteItems.length === 1 ? "" : "s"} before checkout.</p>
+                <a href={quoteEmail} className="mt-2 inline-flex text-sm font-semibold text-cyan-900 underline underline-offset-4 hover:text-cyan-700">
+                  Request price by email
+                </a>
+              </div>
+            )}
             <div className="mt-4 flex justify-between text-sm text-slate-600"><span>Shipping</span><span>To be confirmed</span></div>
             <p className="mt-2 text-xs leading-5 text-slate-500">Shipping and payment are confirmed by the LOG Industries team. No payment is collected online yet.</p>
             <div className="mt-5 border-t border-slate-200 pt-4 text-sm font-bold text-slate-950">Order value before shipping <span className="float-right">₹{subtotal.toLocaleString("en-IN")}</span></div>
@@ -122,7 +139,7 @@ export function ShoppingCartPage() {
                 <label className="block text-xs font-medium text-slate-600">PIN code<input required inputMode="numeric" value={address.postalCode} onChange={(event) => setAddress((current) => ({ ...current, postalCode: event.target.value }))} autoComplete="postal-code" className="mt-1.5 w-full border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-cyan-800" /></label>
               </div>
               {token ? (
-                <button type="submit" disabled={submitting || !cartProducts.length} className="min-h-11 w-full bg-[#102b43] px-5 text-sm font-semibold text-white hover:bg-cyan-900 disabled:cursor-not-allowed disabled:opacity-50">{submitting ? "Submitting order..." : "Place order · payment pending"}</button>
+                <button type="submit" disabled={submitting || !cartProducts.length || quoteItems.length > 0} className="min-h-11 w-full bg-[#102b43] px-5 text-sm font-semibold text-white hover:bg-cyan-900 disabled:cursor-not-allowed disabled:opacity-50">{submitting ? "Submitting order..." : quoteItems.length ? "Price confirmation required" : "Place order · payment pending"}</button>
               ) : (
                 <Link href="/user?next=/cart" className="flex min-h-11 items-center justify-center bg-[#102b43] px-5 text-sm font-semibold text-white hover:bg-cyan-900">Sign in to place order</Link>
               )}

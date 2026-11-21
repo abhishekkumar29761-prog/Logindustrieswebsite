@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Mail, ShieldCheck, Truck } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Truck } from "lucide-react";
 
 import { ProductCard } from "@/components/product-card";
 import { ProductDescription } from "@/components/product-description";
@@ -51,14 +51,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
           {product.description?.trim() && <ProductDescription description={product.description} />}
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-8 max-w-sm">
             <AddToCartButton product={product} />
-            <Link
-              href={`mailto:industrieslog@gmail.com?subject=${encodeURIComponent(`Order enquiry: ${product.name}`)}`}
-              className="inline-flex items-center justify-center gap-2 rounded-sm bg-[#102b43] px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-cyan-900"
-            >
-              <Mail className="h-4 w-4" /> Enquire to purchase
-            </Link>
+            {product.price == null && <p className="mt-2 text-xs leading-5 text-slate-500">Add it to your cart to request the current price. Checkout is available once the price is confirmed.</p>}
           </div>
 
           <div className="mt-8 space-y-4 border-t border-slate-200 pt-6">
