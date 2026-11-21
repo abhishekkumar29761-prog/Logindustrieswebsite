@@ -5,9 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import { categories } from "@/lib/mock-data";
+type CategoryItem = { slug: string; name: string; image: string };
 
-export function CategoryCarousel() {
+export function CategoryCarousel({ categories }: { categories: CategoryItem[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

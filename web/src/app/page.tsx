@@ -3,11 +3,22 @@ import { ArrowRight, Boxes, ChevronRight, Headphones, PackageSearch } from "luci
 
 import { CategoryCarousel } from "@/components/category-carousel";
 import { ProductCard } from "@/components/product-card";
+import { ProductPhoto } from "@/components/product-photo";
 import { categories } from "@/lib/mock-data";
 import { getCatalogProducts } from "@/lib/store-api";
 
 export default async function HomePage() {
   const { items: products } = await getCatalogProducts({ limit: 12 });
+  const heroImage = products.find((product) => product.image)?.image
+    || products.find((product) => product.images?.length)?.images?.[0]
+    || "";
+  const categoriesWithImages = categories.map((category) => ({
+    ...category,
+    image: products.find((product) => product.categorySlug === category.slug && product.image)?.image
+      || products.find((product) => product.categorySlug === category.slug)?.images?.[0]
+      || "",
+  }));
+
   return (
     <main className="bg-white text-slate-950">
       <section className="border-b border-slate-200 bg-[#f3f6f7]">
@@ -33,7 +44,15 @@ export default async function HomePage() {
           </div>
 
           <Link href="/products" className="group relative order-2 block min-h-[300px] overflow-hidden bg-white sm:min-h-[420px] lg:order-2">
-            <div aria-label="Product image unavailable" role="img" className="absolute inset-0 h-full w-full bg-slate-200" />
+            {heroImage ? (
+              <ProductPhoto
+                src={heroImage}
+                alt="Featured LOG Industries product"
+                width={1200}
+                height={900}
+                className="absolute inset-0 h-full w-full object-contain p-8 transition duration-500 group-hover:scale-105 sm:p-12"
+              />
+            ) : <div aria-label="Product image unavailable" role="img" className="absolute inset-0 h-full w-full bg-slate-200" />}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
             <div className="absolute bottom-5 left-5 flex items-center gap-2 text-sm font-semibold text-white sm:bottom-7 sm:left-7">
               Explore LOG products <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" />
@@ -52,7 +71,7 @@ export default async function HomePage() {
             All products <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-        <CategoryCarousel />
+        <CategoryCarousel categories={categoriesWithImages} />
       </section>
 
       <section className="bg-[#f7f8f7] py-12 sm:py-16">
