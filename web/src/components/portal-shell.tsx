@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { ExternalLink, LogOut } from "lucide-react";
 
 import { BrandLogo } from "@/components/brand-logo";
-import { SiteFooter } from "@/components/site-footer";
+import { FloatingContactActions, SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { clearAdminToken, getAdminToken } from "@/lib/admin-api";
 import { getApiBaseUrl } from "@/lib/api-url";
@@ -77,6 +77,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
       <SiteHeader />
       <div className="flex-1">{children}</div>
       <SiteFooter />
+      <FloatingContactActions />
     </div>
   );
 }
