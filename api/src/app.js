@@ -143,13 +143,31 @@ app.post("/api/auth/login", authLimiter, requireDatabase, async (req, res, next)
   }
   try {
     const { data, error } = await authClient.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
-    if (error) return res.status(401).json({ error: "Email or password is incorrect." });
+    if (error) {
+      const message = String(error.message || "").toLowerCase();
+      if (message.includes("email not confirmed")) {
+        return res.status(403).json({ error: "Confirm this email address before signing in." });
+      }
+      if (message.includes("invalid login credentials") || message.includes("invalid credentials")) {
+        return res.status(401).json({ error: "Email or password is incorrect." });
+      }
+      if (message.includes("too many requests") || message.includes("rate limit")) {
+        return res.status(429).json({ error: "Too many sign-in attempts. Wait and try again." });
+      }
+      return res.status(401).json({ error: "Sign-in could not be completed. Check the account credentials." });
+    }
     const { data: profile, error: profileError } = await serviceClient.from("profiles")
       .select("id, full_name, phone, shipping_address, role").eq("id", data.user.id).maybeSingle();
     if (profileError) return next(profileError);
     if (!profile) return res.status(403).json({ error: "Account profile is not provisioned." });
     res.json({ user: data.user, profile, session: data.session });
-  } catch (error) { next(error); }
+  } catch (error) {
+    const message = String(error?.message || "").toLowerCase();
+    if (message.includes("fetch failed") || message.includes("failed to fetch") || message.includes("enotfound")) {
+      return res.status(503).json({ error: "Authentication service is unavailable. Check the Supabase configuration." });
+    }
+    next(error);
+  }
 });
 
 app.post("/api/auth/logout", requireDatabase, async (req, res, next) => {

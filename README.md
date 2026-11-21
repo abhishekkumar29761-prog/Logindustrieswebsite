@@ -23,6 +23,14 @@ set role = 'admin'
 where id = 'AUTH_USER_UUID';
 ```
 
+To reset or confirm an existing admin account:
+
+1. Open Supabase Dashboard → Authentication → Users.
+2. Confirm the admin user if it is unconfirmed.
+3. Use `Reset password` for the admin user, or set a known password.
+4. Promote the user profile with the SQL above.
+5. Redeploy or restart the API after changing Supabase environment variables.
+
 New signups get the `customer` role automatically. Customer-supplied metadata cannot set an admin role.
 
 ## Run locally
