@@ -38,9 +38,9 @@ export function CategoryCarousel({ categories }: { categories: CategoryItem[] })
           <Link
             key={category.slug}
             href={`/products?category=${category.slug}`}
-            className="group flex w-[112px] shrink-0 snap-start flex-col items-center gap-3 text-center sm:w-[142px]"
+            className="group flex w-[132px] shrink-0 snap-start flex-col items-center gap-3 text-center sm:w-[164px]"
           >
-            <span className="relative aspect-square w-full overflow-hidden rounded-full border border-slate-200 bg-[#f3f6f7] p-1 transition duration-300 group-hover:-translate-y-1 group-hover:border-cyan-800 group-hover:shadow-[0_10px_25px_-12px_rgba(8,145,178,0.55)]">
+            <span className="relative aspect-square w-full overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-white to-blue-50 p-2 shadow-[0_10px_25px_-20px_rgba(16,43,67,0.6)] transition duration-300 group-hover:-translate-y-1 group-hover:border-blue-300 group-hover:shadow-[0_18px_30px_-18px_rgba(16,43,67,0.35)] sm:rounded-3xl sm:p-3">
               {category.image ? (
                 <Image
                   src={category.image}
@@ -48,12 +48,12 @@ export function CategoryCarousel({ categories }: { categories: CategoryItem[] })
                   width={300}
                   height={300}
                   unoptimized
-                  className="h-full w-full rounded-full object-cover"
+                  className="h-full w-full rounded-xl object-contain transition duration-500 group-hover:scale-105 sm:rounded-2xl"
                   loading="lazy"
                 />
               ) : <span aria-label={`${category.name} image unavailable`} role="img" className="block h-full w-full rounded-full bg-slate-200" />}
             </span>
-            <span className="min-h-10 text-sm font-semibold leading-5 text-slate-800 group-hover:text-cyan-900">
+            <span className="min-h-10 text-sm font-semibold leading-5 text-slate-800 transition-colors group-hover:text-blue-900">
               {category.name}
             </span>
           </Link>
@@ -64,7 +64,7 @@ export function CategoryCarousel({ categories }: { categories: CategoryItem[] })
           type="button"
           aria-label="Previous categories"
           onClick={() => move(-1)}
-          className="grid h-9 w-9 place-items-center rounded-full border border-slate-300 bg-white text-slate-700 transition hover:border-cyan-800 hover:text-cyan-900"
+          className="grid h-10 w-10 place-items-center rounded-full border border-blue-100 bg-white text-slate-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-900"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -72,7 +72,7 @@ export function CategoryCarousel({ categories }: { categories: CategoryItem[] })
           type="button"
           aria-label="Next categories"
           onClick={() => move(1)}
-          className="grid h-9 w-9 place-items-center rounded-full border border-slate-300 bg-white text-slate-700 transition hover:border-cyan-800 hover:text-cyan-900"
+          className="grid h-10 w-10 place-items-center rounded-full border border-blue-100 bg-white text-slate-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-900"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
