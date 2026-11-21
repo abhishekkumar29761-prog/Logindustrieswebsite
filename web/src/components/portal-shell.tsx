@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ExternalLink, LogOut } from "lucide-react";
@@ -15,6 +16,16 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const isAdmin = pathname.startsWith("/admin");
   const isAdminLogin = pathname === "/admin/login";
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const token = getAdminToken();
+    if (!token && !isAdminLogin) {
+      router.replace("/admin/login");
+    } else if (token && isAdminLogin) {
+      router.replace("/admin");
+    }
+  }, [isAdmin, isAdminLogin, pathname, router]);
 
   async function signOutAdmin() {
     const token = getAdminToken();

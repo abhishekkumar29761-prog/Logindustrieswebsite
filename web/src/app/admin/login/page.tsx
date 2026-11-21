@@ -24,12 +24,15 @@ export default function AdminLoginPage() {
       const response = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.get("email"), password: formData.get("password") }),
+        body: JSON.stringify({
+          email: String(formData.get("email") || "").trim(),
+          password: String(formData.get("password") || ""),
+        }),
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Sign-in failed.");
-      if (result.profile?.role !== "admin") throw new Error("This account does not have admin access.");
-      if (!result.session?.access_token) throw new Error("Authentication did not return a valid session.");
+      const result = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(result?.error || "Sign-in failed.");
+      if (result?.profile?.role !== "admin") throw new Error("This account does not have admin access.");
+      if (!result?.session?.access_token) throw new Error("Authentication did not return a valid session.");
       setAdminToken(result.session.access_token);
       router.replace("/admin");
     } catch (error) {
@@ -60,6 +63,8 @@ export default function AdminLoginPage() {
               id="email"
               name="email"
               type="email"
+              required
+              autoComplete="username"
               className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400"
             />
           </div>
@@ -71,6 +76,8 @@ export default function AdminLoginPage() {
             <PasswordInput
               id="password"
               name="password"
+              required
+              autoComplete="current-password"
               className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400"
             />
           </div>
