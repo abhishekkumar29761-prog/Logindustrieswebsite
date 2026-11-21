@@ -48,6 +48,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             )}
           </div>
 
+          {product.description?.trim() && (
+            <section className="mt-6 border-t border-slate-200 pt-6">
+              <h2 className="text-sm font-bold uppercase tracking-wide text-slate-900">Product description</h2>
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-600">{product.description}</p>
+            </section>
+          )}
+
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <AddToCartButton product={product} />
             <Link

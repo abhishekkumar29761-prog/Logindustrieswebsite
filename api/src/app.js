@@ -8,7 +8,11 @@ const { authClient, configured, serviceClient } = require("./supabase");
 const { authenticate } = require("./middleware/auth");
 
 const app = express();
+const maxProductImages = 50;
+const maxImagesPerUpload = 10;
 app.locals.isAllowedProductImageType = isAllowedProductImageType;
+app.locals.isValidProductImages = validateImages;
+app.locals.maxProductImages = maxProductImages;
 const allowedOrigins = (process.env.CORS_ORIGINS || "")
   .split(",").map((origin) => origin.trim()).filter(Boolean);
 
@@ -99,7 +103,7 @@ function hasValidImageSignature(file) {
 }
 
 function validateImages(images) {
-  return Array.isArray(images) && images.length <= 10
+  return Array.isArray(images) && images.length <= maxProductImages
     && images.every((image) => typeof image === "string" && /^https:\/\//.test(image));
 }
 
@@ -288,7 +292,7 @@ app.get("/api/admin/products", requireDatabase, admin, async (req, res, next) =>
   } catch (error) { next(error); }
 });
 
-app.post("/api/admin/uploads", admin, requireDatabase, productImageUpload.array("files", 10), async (req, res, next) => {
+app.post("/api/admin/uploads", admin, requireDatabase, productImageUpload.array("files", maxImagesPerUpload), async (req, res, next) => {
   const files = req.files || [];
   if (!files.length) return res.status(400).json({ error: "Select at least one image to upload." });
   if (files.some((file) => !hasValidImageSignature(file))) {
@@ -338,7 +342,7 @@ app.post("/api/admin/products", requireDatabase, admin, async (req, res, next) =
   if (originalPrice !== null && originalPrice !== undefined && (!Number.isFinite(Number(originalPrice)) || Number(originalPrice) < 0)) return res.status(400).json({ error: "original_price must be null or a non-negative number." });
   if (stock !== null && stock !== undefined && (!Number.isInteger(stock) || stock < 0)) return res.status(400).json({ error: "stock must be null or a non-negative integer." });
   if (imageUrl !== undefined && imageUrl !== null && (typeof imageUrl !== "string" || !/^https:\/\//.test(imageUrl))) return res.status(400).json({ error: "image_url must be null or an https URL." });
-  if (images !== undefined && !validateImages(images)) return res.status(400).json({ error: "images must be an array of up to 10 https URLs." });
+  if (images !== undefined && !validateImages(images)) return res.status(400).json({ error: `images must be an array of up to ${maxProductImages} https URLs.` });
   if (description !== undefined && description !== null && (typeof description !== "string" || description.length > 10000)) return res.status(400).json({ error: "description must be 10000 characters or fewer." });
   if (isActive !== undefined && typeof isActive !== "boolean") return res.status(400).json({ error: "is_active must be a boolean." });
   try {
@@ -364,7 +368,7 @@ app.patch("/api/admin/products/:id", requireDatabase, admin, async (req, res, ne
   if (patch.original_price !== undefined && patch.original_price !== null && (!Number.isFinite(Number(patch.original_price)) || Number(patch.original_price) < 0)) return res.status(400).json({ error: "original_price must be null or a non-negative number." });
   if (patch.stock !== undefined && patch.stock !== null && (!Number.isInteger(patch.stock) || patch.stock < 0)) return res.status(400).json({ error: "stock must be null or a non-negative integer." });
   if (patch.image_url !== undefined && patch.image_url !== null && (typeof patch.image_url !== "string" || !/^https:\/\//.test(patch.image_url))) return res.status(400).json({ error: "image_url must be null or an https URL." });
-  if (patch.images !== undefined && !validateImages(patch.images)) return res.status(400).json({ error: "images must be an array of up to 10 https URLs." });
+  if (patch.images !== undefined && !validateImages(patch.images)) return res.status(400).json({ error: `images must be an array of up to ${maxProductImages} https URLs.` });
   if (patch.images !== undefined) patch.image_url = patch.images[0] || null;
   else if (patch.image_url !== undefined) patch.images = patch.image_url ? [patch.image_url] : [];
   if (patch.description !== undefined && patch.description !== null && (typeof patch.description !== "string" || patch.description.length > 10000)) return res.status(400).json({ error: "description must be 10000 characters or fewer." });
@@ -422,7 +426,7 @@ app.use((error, req, res, next) => {
     });
   }
   if (error.code === "LIMIT_FILE_SIZE") return res.status(400).json({ error: "Each image must be 2 MB or smaller." });
-  if (error.code === "LIMIT_FILE_COUNT" || error.code === "LIMIT_UNEXPECTED_FILE") return res.status(400).json({ error: "Upload up to 10 images at a time using the files field." });
+  if (error.code === "LIMIT_FILE_COUNT" || error.code === "LIMIT_UNEXPECTED_FILE") return res.status(400).json({ error: `Upload up to ${maxImagesPerUpload} images at a time using the files field.` });
   if (error.message === "Only JPG, PNG, and WebP images are allowed.") return res.status(400).json({ error: error.message });
   if (error.message === "Origin is not allowed by CORS.") return res.status(403).json({ error: error.message });
   if (error.code === "23505") return res.status(409).json({ error: "A record with that unique value already exists." });

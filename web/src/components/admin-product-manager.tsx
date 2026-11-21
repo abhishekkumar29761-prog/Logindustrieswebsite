@@ -9,6 +9,8 @@ import { ProductPhoto } from "@/components/product-photo";
 
 type ProductResponse = { items: Product[]; count: number };
 type UploadedImages = { items: { url: string; path: string }[] };
+const maxProductImages = 50;
+const uploadBatchSize = 10;
 
 function toSlug(name: string) {
   return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -49,8 +51,8 @@ function ProductEditorForm({
     const selected = Array.from(event.currentTarget.files ?? []);
     event.currentTarget.value = "";
     if (!selected.length) return;
-    if (images.length + selected.length > 10) {
-      onError("A product can have up to 10 photos.");
+    if (images.length + selected.length > maxProductImages) {
+      onError(`A product can have up to ${maxProductImages} photos.`);
       return;
     }
     const invalid = selected.find((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 2 * 1024 * 1024);
@@ -60,10 +62,12 @@ function ProductEditorForm({
     }
     setUploading(true);
     try {
-      const body = new FormData();
-      selected.forEach((file) => body.append("files", file));
-      const result = await adminRequest<UploadedImages>("/api/admin/uploads", token, { method: "POST", body });
-      setImages((current) => [...current, ...result.items.map((item) => item.url)]);
+      for (let offset = 0; offset < selected.length; offset += uploadBatchSize) {
+        const body = new FormData();
+        selected.slice(offset, offset + uploadBatchSize).forEach((file) => body.append("files", file));
+        const result = await adminRequest<UploadedImages>("/api/admin/uploads", token, { method: "POST", body });
+        setImages((current) => [...current, ...result.items.map((item) => item.url)]);
+      }
       onError("");
     } catch (reason) {
       onError(reason instanceof Error ? reason.message : "Could not upload product photos.");
@@ -171,9 +175,9 @@ function ProductEditorForm({
         <legend className="mb-2 text-xs font-semibold text-slate-600">Product photos (JPG, PNG, WebP; up to 2 MB each)</legend>
         <label className="inline-flex min-h-9 cursor-pointer items-center border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:border-cyan-800">
           {uploading ? "Uploading..." : "Choose photos"}
-          <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={uploading || images.length >= 10} onChange={uploadFiles} className="sr-only" />
+          <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={uploading || images.length >= maxProductImages} onChange={uploadFiles} className="sr-only" />
         </label>
-        <p className="mt-1 text-xs text-slate-500">The first photo is the main storefront image. Use the arrows to reorder.</p>
+        <p className="mt-1 text-xs text-slate-500">{images.length}/{maxProductImages} photos. The first is the main storefront image. Use the arrows to reorder.</p>
         {images.length > 0 && <div className="mt-3 flex flex-wrap gap-3">
           {images.map((image, index) => <div key={`${image}-${index}`} className={`w-28 border bg-white p-2 ${index === 0 ? "border-cyan-800" : "border-slate-200"}`}>
             <ProductPhoto src={image} alt="" width={100} height={72} className="h-[72px] w-full object-contain" />

@@ -74,6 +74,14 @@ test("product upload accepts only JPG, PNG, and WebP content types", () => {
   assert.equal(app.locals.isAllowedProductImageType("application/pdf"), false);
 });
 
+test("products support up to 50 image URLs", () => {
+  const images = Array.from({ length: 50 }, (_, index) => `https://example.com/${index}.jpg`);
+  assert.equal(app.locals.maxProductImages, 50);
+  assert.equal(app.locals.isValidProductImages(images), true);
+  assert.equal(app.locals.isValidProductImages([...images, "https://example.com/51.jpg"]), false);
+  assert.equal(app.locals.isValidProductImages(["not-a-url"]), false);
+});
+
 test("unknown API paths return a JSON 404", async () => {
   const response = await fetch(`${baseUrl}/api/not-a-route`);
   const body = await response.json();
