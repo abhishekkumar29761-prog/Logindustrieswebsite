@@ -1,6 +1,9 @@
 import Link from "next/link";
 
+import { canonicalMetadata, publicRoutes } from "@/lib/seo";
 import { InfoPage } from "@/components/info-page";
+
+export const metadata = canonicalMetadata(publicRoutes.about);
 
 export default function AboutPage() {
   return (

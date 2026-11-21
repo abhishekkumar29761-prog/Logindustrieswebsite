@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product-card";
 import { categories } from "@/lib/mock-data";
 import { getCatalogProducts } from "@/lib/store-api";
+import { canonicalMetadata, publicRoutes } from "@/lib/seo";
+
+export const metadata = canonicalMetadata(publicRoutes.products);
 
 export default async function ProductsPage({
   searchParams,

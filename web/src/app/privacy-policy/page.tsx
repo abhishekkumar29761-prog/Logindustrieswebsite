@@ -1,4 +1,7 @@
 import { InfoPage } from "@/components/info-page";
+import { canonicalMetadata, publicRoutes } from "@/lib/seo";
+
+export const metadata = canonicalMetadata(publicRoutes.privacy);
 
 const emailLink = (
   <a href="mailto:industrieslog@gmail.com" className="font-semibold text-cyan-900 hover:underline">

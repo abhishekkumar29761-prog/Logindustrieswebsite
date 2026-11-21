@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.logindustries.com"),
   title: "LogIndustries | Industrial Ecommerce Store",
   description: "Premium industrial tools, safety gear, and supply products built with Next.js.",
 };

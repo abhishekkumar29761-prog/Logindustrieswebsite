@@ -6,6 +6,9 @@ import { FeaturedProductCarousel } from "@/components/featured-product-carousel"
 import { ProductCard } from "@/components/product-card";
 import { categories } from "@/lib/mock-data";
 import { getCatalogProducts } from "@/lib/store-api";
+import { canonicalMetadata, publicRoutes } from "@/lib/seo";
+
+export const metadata = canonicalMetadata(publicRoutes.home);
 
 export default async function HomePage() {
   const { items: products } = await getCatalogProducts({ limit: 12 });

@@ -1,6 +1,9 @@
 import Link from "next/link";
 
 import { InfoPage } from "@/components/info-page";
+import { canonicalMetadata, publicRoutes } from "@/lib/seo";
+
+export const metadata = canonicalMetadata(publicRoutes.refund);
 
 export default function RefundPolicyPage() {
   return (

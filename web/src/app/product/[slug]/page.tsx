@@ -8,7 +8,13 @@ import { ProductGallery } from "@/components/product-gallery";
 import { ProductReviews } from "@/components/product-reviews";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { categories } from "@/lib/mock-data";
+import { canonicalMetadata } from "@/lib/seo";
 import { getCatalogProduct, getCatalogProducts } from "@/lib/store-api";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  return canonicalMetadata(`/product/${encodeURIComponent(slug)}`);
+}
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

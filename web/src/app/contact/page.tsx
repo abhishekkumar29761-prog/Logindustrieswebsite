@@ -1,6 +1,9 @@
 import Link from "next/link";
 
 import { ContactMap } from "@/components/contact-map";
+import { canonicalMetadata, publicRoutes } from "@/lib/seo";
+
+export const metadata = canonicalMetadata(publicRoutes.contact);
 
 export default function ContactPage() {
   return (
