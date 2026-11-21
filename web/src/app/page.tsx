@@ -45,13 +45,23 @@ export default async function HomePage() {
 
           <Link href="/products" className="group relative order-2 block min-h-[300px] overflow-hidden bg-white sm:min-h-[420px] lg:order-2">
             {heroImage ? (
-              <ProductPhoto
-                src={heroImage}
-                alt="Featured LOG Industries product"
-                width={1200}
-                height={900}
-                className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
-              />
+              <>
+                <ProductPhoto
+                  src={heroImage}
+                  alt=""
+                  width={1200}
+                  height={900}
+                  className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl"
+                />
+                <div className="absolute inset-0 bg-slate-950/15" />
+                <ProductPhoto
+                  src={heroImage}
+                  alt="Featured LOG Industries product"
+                  width={1200}
+                  height={900}
+                  className="absolute inset-0 h-full w-full object-contain p-5 transition-transform duration-500 group-hover:scale-[1.03] sm:p-8"
+                />
+              </>
             ) : <div aria-label="Product image unavailable" role="img" className="absolute inset-0 h-full w-full bg-slate-200" />}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent via-35% to-transparent" />
             <div className="absolute bottom-5 left-5 flex items-center gap-2 text-sm font-semibold text-white sm:bottom-7 sm:left-7">
