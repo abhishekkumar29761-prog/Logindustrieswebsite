@@ -1,6 +1,6 @@
 import { ExternalLink, Star } from "lucide-react";
 
-const googleProfileUrl = "https://www.google.com/search?q=logindustries";
+import { googleProfileUrl } from "@/lib/google-reviews";
 
 export function GoogleReviewsSection() {
   return (
@@ -18,7 +18,9 @@ export function GoogleReviewsSection() {
               <span className="flex gap-0.5" aria-label="5 out of 5 stars">
                 {Array.from({ length: 5 }, (_, index) => <Star key={index} aria-hidden="true" className="h-4 w-4 fill-amber-400 text-amber-400" />)}
               </span>
-              <span className="mt-1 block text-xs font-medium text-slate-500">23 Google reviews</span>
+              <a href={googleProfileUrl} target="_blank" rel="noreferrer" aria-label="View all 23 Google reviews" className="mt-1 block text-xs font-medium text-blue-800 underline decoration-blue-200 underline-offset-2 transition hover:text-blue-950 hover:decoration-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
+                23 Google reviews
+              </a>
             </span>
           </div>
           <a
@@ -27,7 +29,7 @@ export function GoogleReviewsSection() {
             rel="noreferrer"
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#102b43] px-5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
           >
-            View reviews &amp; write one <ExternalLink className="h-4 w-4" />
+            See reviews &amp; write yours <ExternalLink className="h-4 w-4" />
           </a>
         </div>
       </div>

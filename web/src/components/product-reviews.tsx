@@ -6,6 +6,7 @@ import { ExternalLink, Star } from "lucide-react";
 
 import { getCustomerToken, getServerCustomerToken, subscribeToCustomerAuth } from "@/lib/auth-store";
 import { getApiBaseUrl } from "@/lib/api-url";
+import { googleProfileUrl } from "@/lib/google-reviews";
 
 type Review = {
   id: string;
@@ -18,7 +19,6 @@ type Review = {
 };
 
 type OwnReview = { id: string; rating: number; title: string; body: string; status: string };
-const googleProfileUrl = "https://www.google.com/search?q=logindustries";
 
 function Stars({ rating, label }: { rating: number; label?: string }) {
   return (

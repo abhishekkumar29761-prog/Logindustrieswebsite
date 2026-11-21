@@ -1,0 +1,1 @@
+export const googleProfileUrl = "https://www.google.com/maps/place/LogIndustries/@28.6484643,77.0957591,17z/data=!3m1!4b1!4m6!3m5!1s0x390d052eb53e7d91:0xd1cb3e3e871fd249!8m2!3d28.6484643!4d77.0957591!16s%2Fg%2F11z3k5vys5";
