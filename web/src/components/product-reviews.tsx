@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore, type FormEvent } from "react";
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { ExternalLink, Star } from "lucide-react";
 
 import { getCustomerToken, getServerCustomerToken, subscribeToCustomerAuth } from "@/lib/auth-store";
 import { getApiBaseUrl } from "@/lib/api-url";
@@ -18,6 +18,7 @@ type Review = {
 };
 
 type OwnReview = { id: string; rating: number; title: string; body: string; status: string };
+const googleProfileUrl = "https://www.google.com/search?q=logindustries";
 
 function Stars({ rating, label }: { rating: number; label?: string }) {
   return (
@@ -148,6 +149,9 @@ export function ProductReviews({ slug, productName }: { slug: string; productNam
         <aside className="h-fit rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 sm:p-6">
           <h3 className="text-lg font-bold text-[#102b43]">{ownReview ? "Update your review" : "Rate this product"}</h3>
           <p className="mt-1 text-sm leading-5 text-slate-600">Only customers whose order was delivered can review {productName}. Reviews appear after approval.</p>
+          <a href={googleProfileUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-lg border border-blue-200 bg-white px-3 text-xs font-semibold text-blue-900 transition hover:border-blue-400 hover:bg-blue-50">
+            Also review us on Google <ExternalLink className="h-3.5 w-3.5" />
+          </a>
           {!token ? (
             <Link href={`/user?next=${encodeURIComponent(`/product/${slug}`)}`} className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-[#102b43] px-4 text-sm font-semibold text-white transition hover:bg-blue-900">
               Sign in to review

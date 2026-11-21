@@ -8,6 +8,7 @@ import { ExternalLink, LogOut } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { FloatingContactActions, SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { GoogleReviewsSection } from "@/components/google-reviews-section";
 import { clearAdminToken, getAdminToken } from "@/lib/admin-api";
 import { getApiBaseUrl } from "@/lib/api-url";
 
@@ -76,6 +77,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen flex-col bg-white">
       <SiteHeader />
       <div className="flex-1">{children}</div>
+      <GoogleReviewsSection />
       <SiteFooter />
       <FloatingContactActions />
     </div>
