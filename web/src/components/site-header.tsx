@@ -1,11 +1,16 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { Search, ShoppingCart, UserRound } from "lucide-react";
+import { Menu, Search, ShoppingCart, UserRound, X } from "lucide-react";
 
 import { BrandLogo } from "@/components/brand-logo";
 import { CartCount } from "@/components/cart-count";
-import { navItems } from "@/lib/mock-data";
+import { primaryLinks } from "@/lib/site-navigation";
 
 export function SiteHeader() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
@@ -13,8 +18,8 @@ export function SiteHeader() {
           <BrandLogo compact />
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex">
-          {navItems.map((item) => (
+        <nav aria-label="Main navigation" className="hidden items-center gap-5 lg:flex xl:gap-8">
+          {primaryLinks.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -43,8 +48,35 @@ export function SiteHeader() {
             <UserRound className="h-4 w-4" />
             Profile
           </Link>
+          <button
+            type="button"
+            aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-navigation"
+            onClick={() => setMenuOpen((open) => !open)}
+            className="inline-flex p-2 text-slate-700 transition hover:text-cyan-900 lg:hidden"
+          >
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
       </div>
+      {menuOpen && (
+        <nav id="mobile-navigation" aria-label="Mobile navigation" className="border-t border-slate-200 bg-white px-5 py-3 lg:hidden">
+          <ul className="mx-auto flex max-w-7xl flex-col sm:px-3">
+            {primaryLinks.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  onClick={() => setMenuOpen(false)}
+                  className="block border-b border-slate-100 py-3 text-sm font-medium text-slate-700 transition last:border-0 hover:text-cyan-900"
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
     </header>
   );
 }
