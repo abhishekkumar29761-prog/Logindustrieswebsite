@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Mail, ShieldCheck, Truck } from "lucide-react";
 
 import { ProductCard } from "@/components/product-card";
+import { ProductDescription } from "@/components/product-description";
 import { ProductGallery } from "@/components/product-gallery";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { categories } from "@/lib/mock-data";
@@ -48,12 +49,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             )}
           </div>
 
-          {product.description?.trim() && (
-            <section className="mt-6 border-t border-slate-200 pt-6">
-              <h2 className="text-sm font-bold uppercase tracking-wide text-slate-900">Product description</h2>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-600">{product.description}</p>
-            </section>
-          )}
+          {product.description?.trim() && <ProductDescription description={product.description} />}
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <AddToCartButton product={product} />
