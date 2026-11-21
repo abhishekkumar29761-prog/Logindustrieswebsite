@@ -65,6 +65,22 @@ function validPassword(value) {
   return typeof value === "string" && value.length >= 8;
 }
 
+function validateProductReview(input) {
+  const { rating, title, body } = input || {};
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return { error: "Rating must be a whole number from 1 to 5." };
+  }
+  if (typeof title !== "string" || title.trim().length < 3 || title.trim().length > 120) {
+    return { error: "Review title must be between 3 and 120 characters." };
+  }
+  if (typeof body !== "string" || body.trim().length < 10 || body.trim().length > 2000) {
+    return { error: "Review must be between 10 and 2000 characters." };
+  }
+  return { value: { rating, title: title.trim(), body: body.trim() } };
+}
+
+app.locals.validateProductReview = validateProductReview;
+
 function isProductStorageImage(value) {
   if (typeof value !== "string") return false;
   try {
@@ -222,6 +238,32 @@ app.get("/api/products/:slug", requireDatabase, async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+app.get("/api/products/:slug/reviews", requireDatabase, async (req, res, next) => {
+  try {
+    const { data: product, error: productError } = await serviceClient.from("products")
+      .select("id").eq("slug", req.params.slug).eq("is_active", true).maybeSingle();
+    if (productError) return next(productError);
+    if (!product) return res.status(404).json({ error: "Product not found." });
+
+    const { data, error, count } = await serviceClient.from("product_reviews")
+      .select("id, rating, title, body, created_at, profiles(full_name)", { count: "exact" })
+      .eq("product_id", product.id).eq("status", "approved").order("created_at", { ascending: false });
+    if (error) return next(error);
+    res.json({
+      items: data.map((review) => ({
+        id: review.id,
+        rating: review.rating,
+        title: review.title,
+        body: review.body,
+        customer_name: review.profiles?.full_name?.trim().split(/\s+/)[0] || "Verified customer",
+        verified_purchase: true,
+        created_at: review.created_at,
+      })),
+      count: count || 0,
+    });
+  } catch (error) { next(error); }
+});
+
 app.get("/api/account/profile", requireDatabase, customer, (req, res) => {
   res.json({ item: { ...req.profile, email: req.user.email } });
 });
@@ -248,6 +290,49 @@ app.get("/api/account/orders", requireDatabase, customer, async (req, res, next)
       .eq("user_id", req.user.id).order("created_at", { ascending: false });
     if (error) return next(error);
     res.json({ items: data, count: data.length });
+  } catch (error) { next(error); }
+});
+
+app.get("/api/account/reviews", requireDatabase, customer, async (req, res, next) => {
+  try {
+    const { data, error } = await serviceClient.from("product_reviews")
+      .select("id, rating, title, body, status, created_at, updated_at, products(name, slug, image_url)")
+      .eq("user_id", req.user.id).order("updated_at", { ascending: false });
+    if (error) return next(error);
+    res.json({ items: data, count: data.length });
+  } catch (error) { next(error); }
+});
+
+app.post("/api/account/products/:slug/review", requireDatabase, customer, async (req, res, next) => {
+  const validated = validateProductReview(req.body);
+  if (validated.error) return res.status(400).json({ error: validated.error });
+  try {
+    const { data: product, error: productError } = await serviceClient.from("products")
+      .select("id").eq("slug", req.params.slug).eq("is_active", true).maybeSingle();
+    if (productError) return next(productError);
+    if (!product) return res.status(404).json({ error: "Product not found." });
+
+    const { data: orders, error: ordersError } = await serviceClient.from("orders")
+      .select("id").eq("user_id", req.user.id).eq("status", "delivered");
+    if (ordersError) return next(ordersError);
+    const orderIds = orders.map((order) => order.id);
+    if (!orderIds.length) return res.status(403).json({ error: "Only customers who received this product can review it." });
+
+    const { data: purchasedItem, error: itemError } = await serviceClient.from("order_items")
+      .select("id").eq("product_id", product.id).in("order_id", orderIds).limit(1).maybeSingle();
+    if (itemError) return next(itemError);
+    if (!purchasedItem) return res.status(403).json({ error: "Only customers who received this product can review it." });
+
+    const { data, error } = await serviceClient.from("product_reviews").upsert({
+      product_id: product.id,
+      user_id: req.user.id,
+      order_item_id: purchasedItem.id,
+      ...validated.value,
+      status: "pending",
+    }, { onConflict: "product_id,user_id" })
+      .select("id, rating, title, body, status, created_at, updated_at").single();
+    if (error) return next(error);
+    res.status(201).json({ item: data, message: "Your review was submitted for approval." });
   } catch (error) { next(error); }
 });
 
@@ -404,6 +489,37 @@ app.get("/api/admin/orders", requireDatabase, admin, async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+app.get("/api/admin/reviews", requireDatabase, admin, async (req, res, next) => {
+  const statuses = ["pending", "approved", "rejected"];
+  if (req.query.status && !statuses.includes(String(req.query.status))) {
+    return res.status(400).json({ error: `status must be one of: ${statuses.join(", ")}.` });
+  }
+  try {
+    let query = serviceClient.from("product_reviews")
+      .select("id, rating, title, body, status, created_at, profiles(full_name), products(name, slug)")
+      .order("created_at", { ascending: false });
+    if (req.query.status) query = query.eq("status", String(req.query.status));
+    const { data, error } = await query;
+    if (error) return next(error);
+    res.json({ items: data, count: data.length });
+  } catch (error) { next(error); }
+});
+
+app.patch("/api/admin/reviews/:id", requireDatabase, admin, async (req, res, next) => {
+  const { status } = req.body || {};
+  if (!["approved", "rejected"].includes(status)) {
+    return res.status(400).json({ error: "status must be approved or rejected." });
+  }
+  try {
+    const { data, error } = await serviceClient.from("product_reviews")
+      .update({ status }).eq("id", req.params.id)
+      .select("id, rating, title, body, status, created_at, profiles(full_name), products(name, slug)").maybeSingle();
+    if (error) return next(error);
+    if (!data) return res.status(404).json({ error: "Review not found." });
+    res.json({ item: data });
+  } catch (error) { next(error); }
+});
+
 app.patch("/api/admin/orders/:id", requireDatabase, admin, async (req, res, next) => {
   const validStatuses = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"];
   if (!validStatuses.includes(req.body?.status)) return res.status(400).json({ error: `status must be one of: ${validStatuses.join(", ")}.` });
@@ -421,6 +537,13 @@ app.use((req, res) => res.status(404).json({ error: "Route not found." }));
 app.use((error, req, res, next) => {
   if (res.headersSent) return next(error);
   const errorDetails = [error.message, error.details, error.hint].filter(Boolean).join(" ");
+  if ((error.code === "42P01" || error.code === "PGRST205")
+      && /\bproduct_reviews\b/i.test(errorDetails)
+      && /(does not exist|not found|schema cache|could not find)/i.test(errorDetails)) {
+    return res.status(503).json({
+      error: "Product reviews are not set up. Run migration 202611210001_product_reviews.sql in Supabase.",
+    });
+  }
   if ((error.code === "42703" || error.code === "PGRST204")
       && /\bimages\b/i.test(errorDetails)
       && /(does not exist|not found|schema cache|could not find)/i.test(errorDetails)) {

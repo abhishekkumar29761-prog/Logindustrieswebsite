@@ -5,6 +5,7 @@ import { ArrowLeft, ShieldCheck, Truck } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
 import { ProductDescription } from "@/components/product-description";
 import { ProductGallery } from "@/components/product-gallery";
+import { ProductReviews } from "@/components/product-reviews";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { categories } from "@/lib/mock-data";
 import { getCatalogProduct, getCatalogProducts } from "@/lib/store-api";
@@ -68,6 +69,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           </div>
         </div>
       </div>
+
+      <ProductReviews slug={product.slug} productName={product.name} />
 
       {relatedProducts.length > 0 && <div className="mt-16 border-t border-blue-100 pt-12 sm:mt-20 sm:pt-16">
         <div className="mb-8 flex items-end justify-between gap-4">

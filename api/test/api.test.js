@@ -110,6 +110,14 @@ test("products support up to 50 image URLs", () => {
   assert.equal(app.locals.isValidProductImages(["not-a-url"]), false);
 });
 
+test("product reviews require a valid star rating, title, and review body", () => {
+  const valid = app.locals.validateProductReview({ rating: 5, title: "Great product", body: "Works exactly as described." });
+  assert.deepEqual(valid.value, { rating: 5, title: "Great product", body: "Works exactly as described." });
+  assert.match(app.locals.validateProductReview({ rating: 0, title: "Great", body: "Long enough review." }).error, /Rating/);
+  assert.match(app.locals.validateProductReview({ rating: 4, title: "ok", body: "Long enough review." }).error, /title/);
+  assert.match(app.locals.validateProductReview({ rating: 4, title: "Great product", body: "short" }).error, /Review must/);
+});
+
 test("unknown API paths return a JSON 404", async () => {
   const response = await fetch(`${baseUrl}/api/not-a-route`);
   const body = await response.json();

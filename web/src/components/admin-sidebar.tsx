@@ -1,16 +1,17 @@
 import Link from "next/link";
-import { BarChart3, Box, CreditCard, LayoutDashboard } from "lucide-react";
+import { BarChart3, Box, CreditCard, LayoutDashboard, MessageSquareText } from "lucide-react";
 
 const items = [
   { label: "Overview", href: "/admin", icon: LayoutDashboard },
   { label: "Products", href: "/admin/products", icon: Box },
   { label: "Orders", href: "/admin/orders", icon: CreditCard },
+  { label: "Reviews", href: "/admin/reviews", icon: MessageSquareText },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
 ];
 
 export function AdminSidebar() {
   return (
-    <aside className="grid grid-cols-2 gap-1 border-b border-slate-200 pb-3 sm:grid-cols-4 lg:flex lg:flex-col lg:overflow-visible lg:border-b-0 lg:border-r lg:pb-0 lg:pr-5">
+    <aside className="grid grid-cols-2 gap-1 border-b border-slate-200 pb-3 sm:grid-cols-3 lg:flex lg:flex-col lg:overflow-visible lg:border-b-0 lg:border-r lg:pb-0 lg:pr-5">
       {items.map(({ label, href, icon: Icon }) => (
         <Link
           key={href}

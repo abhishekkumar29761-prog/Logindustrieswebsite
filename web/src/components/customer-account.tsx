@@ -3,15 +3,24 @@
 import { useEffect, useState, useSyncExternalStore, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, MapPin, PackageCheck, Save, UserRound } from "lucide-react";
+import { LogOut, MapPin, MessageSquareText, PackageCheck, Save, UserRound } from "lucide-react";
 
 import { clearCustomerToken, getCustomerToken, getServerCustomerToken, setCustomerToken, subscribeToCustomerAuth } from "@/lib/auth-store";
 import { getApiBaseUrl } from "@/lib/api-url";
 import { PasswordInput } from "@/components/password-input";
 
-type AccountSection = "profile" | "orders" | "addresses";
+type AccountSection = "profile" | "orders" | "addresses" | "reviews";
 type Profile = { fullName: string; email: string; phone: string; address: string; city: string; postalCode: string };
 type Order = { id: string; order_number: string; status: string; payment_status: string; total: number; created_at: string };
+type AccountReview = {
+  id: string;
+  rating: number;
+  title: string;
+  body: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  products: { name: string; slug: string } | null;
+};
 
 const emptyProfile: Profile = { fullName: "", email: "", phone: "", address: "", city: "", postalCode: "" };
 
@@ -37,6 +46,7 @@ export function CustomerAccount() {
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [profile, setProfile] = useState<Profile>(emptyProfile);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [reviews, setReviews] = useState<AccountReview[]>([]);
   const [message, setMessage] = useState("");
   const [saved, setSaved] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -47,7 +57,8 @@ export function CustomerAccount() {
     Promise.all([
       accountFetch("/api/account/profile", token),
       accountFetch("/api/account/orders", token),
-    ]).then(async ([profileResponse, ordersResponse]) => {
+      accountFetch("/api/account/reviews", token),
+    ]).then(async ([profileResponse, ordersResponse, reviewsResponse]) => {
       if (profileResponse.status === 401 || profileResponse.status === 403) {
         clearCustomerToken();
         throw new Error("Please sign in again to access your account.");
@@ -55,6 +66,8 @@ export function CustomerAccount() {
       const profileBody = await profileResponse.json();
       if (!profileResponse.ok) throw new Error(profileBody.error || "Could not load profile.");
       const ordersBody = ordersResponse.ok ? await ordersResponse.json() : { items: [] };
+      const reviewsBody = await reviewsResponse.json();
+      if (!reviewsResponse.ok) throw new Error(reviewsBody.error || "Could not load your reviews.");
       if (!active) return;
       const item = profileBody.item;
       setProfile({
@@ -64,6 +77,7 @@ export function CustomerAccount() {
         ...addressFields(item.shipping_address),
       });
       setOrders(Array.isArray(ordersBody.items) ? ordersBody.items : []);
+      setReviews(Array.isArray(reviewsBody.items) ? reviewsBody.items : []);
     }).catch((error: unknown) => {
       if (active) setMessage(error instanceof Error ? error.message : "Unable to load account data.");
     });
@@ -133,6 +147,7 @@ export function CustomerAccount() {
     }
     clearCustomerToken();
     setOrders([]);
+    setReviews([]);
     setProfile(emptyProfile);
     setSaved(false);
     setMessage("");
@@ -146,6 +161,7 @@ export function CustomerAccount() {
   const tabs: { id: AccountSection; label: string; icon: typeof UserRound }[] = [
     { id: "profile", label: "Personal details", icon: UserRound },
     { id: "orders", label: "Orders", icon: PackageCheck },
+    { id: "reviews", label: "My reviews", icon: MessageSquareText },
     { id: "addresses", label: "Address book", icon: MapPin },
   ];
 
@@ -214,7 +230,7 @@ export function CustomerAccount() {
                 {saved && <p role="status" className="text-sm text-emerald-700">Saved to your account.</p>}
               </div>
             </form>
-          ) : (
+          ) : section === "orders" ? (
             <div className="max-w-3xl">
               <div className="mb-7"><h2 className="text-xl font-bold text-slate-950">Your orders</h2><p className="mt-1 text-sm text-slate-500">Order history and delivery updates.</p></div>
               {orders.length ? <div className="divide-y divide-slate-200 border-y border-slate-200">
@@ -223,6 +239,23 @@ export function CustomerAccount() {
                   <div className="text-right"><p className="font-bold text-slate-900">₹{Number(order.total).toLocaleString("en-IN")}</p><p className="text-xs font-semibold uppercase text-slate-600">{order.status} · payment {order.payment_status}</p></div>
                 </div>)}
               </div> : <div className="border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center"><PackageCheck className="mx-auto h-8 w-8 text-slate-400" /><h3 className="mt-4 text-base font-semibold text-slate-900">No orders yet</h3><p className="mt-2 text-sm leading-6 text-slate-600">Orders placed through this account will appear here.</p><Link href="/products" className="mt-6 inline-flex min-h-10 items-center bg-[#102b43] px-4 text-sm font-semibold text-white">Browse products</Link></div>}
+            </div>
+          ) : (
+            <div className="max-w-3xl">
+              <div className="mb-7"><h2 className="text-xl font-bold text-slate-950">My reviews</h2><p className="mt-1 text-sm text-slate-500">Track reviews you have submitted and their approval status.</p></div>
+              {reviews.length ? <div className="divide-y divide-slate-200 border-y border-slate-200">
+                {reviews.map((review) => <article key={review.id} className="py-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      {review.products ? <Link href={`/product/${review.products.slug}`} className="font-semibold text-blue-900 hover:underline">{review.products.name}</Link> : <p className="font-semibold text-slate-900">Product review</p>}
+                      <p className="mt-1 text-sm font-semibold text-slate-800">{review.title} · {review.rating}/5 stars</p>
+                    </div>
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${review.status === "approved" ? "bg-emerald-50 text-emerald-700" : review.status === "rejected" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-800"}`}>{review.status === "pending" ? "Awaiting approval" : review.status}</span>
+                  </div>
+                  <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-600">{review.body}</p>
+                  <p className="mt-2 text-xs text-slate-400">Submitted {new Date(review.created_at).toLocaleDateString("en-IN")}</p>
+                </article>)}
+              </div> : <div className="border border-dashed border-blue-200 bg-blue-50/40 px-6 py-12 text-center"><MessageSquareText className="mx-auto h-8 w-8 text-blue-400" /><h3 className="mt-4 text-base font-semibold text-slate-900">No reviews yet</h3><p className="mt-2 text-sm leading-6 text-slate-600">After ordering a product, you can leave a rating and review from its product page.</p><Link href="/products" className="mt-6 inline-flex min-h-10 items-center rounded-lg bg-[#102b43] px-4 text-sm font-semibold text-white">Browse products</Link></div>}
             </div>
           )}
           {message && <p role="alert" className="mt-5 max-w-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">{message}</p>}
