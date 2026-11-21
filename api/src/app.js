@@ -13,15 +13,18 @@ const maxImagesPerUpload = 10;
 app.locals.isAllowedProductImageType = isAllowedProductImageType;
 app.locals.isValidProductImages = validateImages;
 app.locals.maxProductImages = maxProductImages;
-const allowedOrigins = (process.env.CORS_ORIGINS || "")
-  .split(",").map((origin) => origin.trim()).filter(Boolean);
+const allowedOrigins = new Set([
+  "https://logindustries.com",
+  "https://www.logindustries.com",
+  ...(process.env.CORS_ORIGINS || "").split(",").map((origin) => origin.trim()).filter(Boolean),
+]);
 
 app.set("trust proxy", 1);
 app.disable("x-powered-by");
 app.use(helmet());
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
     return callback(new Error("Origin is not allowed by CORS."));
   },
   allowedHeaders: ["Content-Type", "Authorization"],

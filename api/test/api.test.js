@@ -37,6 +37,34 @@ test("database-backed catalog fails closed when Supabase is not configured", asy
   assert.match(body.error, /Supabase is not configured/);
 });
 
+test("login CORS allows the official storefront domains", async () => {
+  for (const origin of ["https://logindustries.com", "https://www.logindustries.com"]) {
+    const response = await fetch(`${baseUrl}/api/auth/login`, {
+      method: "OPTIONS",
+      headers: {
+        Origin: origin,
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "content-type",
+      },
+    });
+    assert.equal(response.status, 204);
+    assert.equal(response.headers.get("access-control-allow-origin"), origin);
+  }
+});
+
+test("login CORS rejects unconfigured storefront domains", async () => {
+  const response = await fetch(`${baseUrl}/api/auth/login`, {
+    method: "OPTIONS",
+    headers: {
+      Origin: "https://untrusted.example",
+      "Access-Control-Request-Method": "POST",
+      "Access-Control-Request-Headers": "content-type",
+    },
+  });
+  assert.equal(response.status, 403);
+  assert.equal(response.headers.get("access-control-allow-origin"), null);
+});
+
 test("admin upload endpoint rejects requests without an admin bearer token", async () => {
   const response = await fetch(`${baseUrl}/api/admin/uploads`, { method: "POST" });
   const body = await response.json();
