@@ -20,6 +20,15 @@ function normalizeProduct(value: unknown): Product | null {
   const originalPrice = row.originalPrice == null ? null : Number(row.originalPrice);
   if ((price !== null && !Number.isFinite(price)) || (originalPrice !== null && !Number.isFinite(originalPrice))) return null;
 
+  const isTankMateProCutout = row.slug === "tank-mate-pro-2"
+    && typeof row.image === "string"
+    && row.image.includes("/b7879529-9abc-46cb-968b-441f758d9687.png");
+  const image = isTankMateProCutout ? "/product-images/tank-mate-pro-2.webp" : (typeof row.image === "string" ? row.image : "");
+  const images = Array.isArray(row.images)
+    ? row.images.filter((item): item is string => typeof item === "string")
+    : (image ? [image] : []);
+  const displayImages = isTankMateProCutout ? [image, ...images.slice(1)] : images;
+
   return {
     id: row.id,
     slug: row.slug,
@@ -28,8 +37,8 @@ function normalizeProduct(value: unknown): Product | null {
     categorySlug: typeof row.category_slug === "string" ? row.category_slug : categoryRecord.slug,
     price,
     originalPrice,
-    image: typeof row.image === "string" ? row.image : "",
-    images: Array.isArray(row.images) ? row.images.filter((image): image is string => typeof image === "string") : (typeof row.image === "string" && row.image ? [row.image] : []),
+    image,
+    images: displayImages,
     description: typeof row.description === "string" ? row.description : "",
     stock: typeof row.stock === "number" ? row.stock : null,
     active: typeof row.active === "boolean" ? row.active : true,

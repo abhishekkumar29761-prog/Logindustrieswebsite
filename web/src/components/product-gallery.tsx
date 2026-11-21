@@ -9,7 +9,7 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
 
   return (
     <div>
-      <div className="overflow-hidden bg-slate-200">
+      <div className="overflow-hidden bg-white">
         <ProductPhoto
           src={gallery[selected]}
           alt={name}
