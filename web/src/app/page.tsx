@@ -50,10 +50,10 @@ export default async function HomePage() {
                 alt="Featured LOG Industries product"
                 width={1200}
                 height={900}
-                className="absolute inset-0 h-full w-full object-contain p-8 transition duration-500 group-hover:scale-105 sm:p-12"
+                className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
               />
             ) : <div aria-label="Product image unavailable" role="img" className="absolute inset-0 h-full w-full bg-slate-200" />}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent via-35% to-transparent" />
             <div className="absolute bottom-5 left-5 flex items-center gap-2 text-sm font-semibold text-white sm:bottom-7 sm:left-7">
               Explore LOG products <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" />
             </div>
