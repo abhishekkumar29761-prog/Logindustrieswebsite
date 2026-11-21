@@ -1,17 +1,14 @@
 import Link from "next/link";
-import { ArrowRight, Boxes, ChevronRight, Headphones, PackageSearch } from "lucide-react";
+import { ArrowRight, Boxes, Headphones, PackageSearch } from "lucide-react";
 
 import { CategoryCarousel } from "@/components/category-carousel";
+import { FeaturedProductCarousel } from "@/components/featured-product-carousel";
 import { ProductCard } from "@/components/product-card";
-import { ProductPhoto } from "@/components/product-photo";
 import { categories } from "@/lib/mock-data";
 import { getCatalogProducts } from "@/lib/store-api";
 
 export default async function HomePage() {
   const { items: products } = await getCatalogProducts({ limit: 12 });
-  const heroImage = products.find((product) => product.image)?.image
-    || products.find((product) => product.images?.length)?.images?.[0]
-    || "";
   const categoriesWithImages = categories.map((category) => ({
     ...category,
     image: products.find((product) => product.categorySlug === category.slug && product.image)?.image
@@ -45,41 +42,20 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <Link href="/products" className="group relative order-2 block min-h-[300px] overflow-hidden rounded-2xl border border-white bg-white shadow-[0_20px_60px_-32px_rgba(16,43,67,0.45)] sm:min-h-[420px] lg:order-2">
-            {heroImage ? (
-              <>
-                <ProductPhoto
-                  src={heroImage}
-                  alt=""
-                  width={1200}
-                  height={900}
-                  className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl"
-                />
-                <div className="absolute inset-0 bg-slate-950/15" />
-                <ProductPhoto
-                  src={heroImage}
-                  alt="Featured LOG Industries product"
-                  width={1200}
-                  height={900}
-                  className="absolute inset-0 h-full w-full object-contain p-5 transition-transform duration-500 group-hover:scale-[1.03] sm:p-8"
-                />
-              </>
-            ) : <div aria-label="Product image unavailable" role="img" className="absolute inset-0 h-full w-full bg-slate-200" />}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#102b43]/70 via-transparent via-35% to-transparent" />
-            <div className="absolute bottom-5 left-5 inline-flex items-center gap-2 rounded-full border border-white/30 bg-[#102b43]/75 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition group-hover:bg-[#102b43] sm:bottom-7 sm:left-7">
-              Explore LOG products <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" />
-            </div>
-          </Link>
+          <div className="order-2 lg:order-2">
+            <FeaturedProductCarousel products={products} />
+          </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-7xl px-5 py-14 sm:px-8 lg:py-20">
-        <div className="mb-7 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-800">Explore collections</p>
-            <h2 className="mt-2 text-2xl font-bold text-[#101c2c] sm:text-3xl">Shop by category</h2>
+        <div className="relative mb-9 flex justify-center">
+          <div className="text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-800 sm:text-sm">Explore collections</p>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-[#101c2c] sm:text-4xl lg:text-5xl">Shop by category</h2>
+            <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-600 sm:text-base">Find the right solution for your home, business, and everyday needs.</p>
           </div>
-          <Link href="/products" className="hidden items-center gap-1 text-sm font-semibold text-blue-900 transition hover:text-blue-700 sm:inline-flex">
+          <Link href="/products" className="absolute right-0 top-1/2 hidden -translate-y-1/2 items-center gap-1 text-sm font-semibold text-blue-900 transition hover:text-blue-700 lg:inline-flex">
             All products <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
